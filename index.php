@@ -17,12 +17,31 @@
     $playersLeidos = array();
     $player = new Player ();
 
-    $player->setCodePlayer(3);
+    $player->setCodePlayer("");
     $player->setFirstName("Matias");
     $player->setLastName("Portela");
     $player->setEmail("matiasportela@gmail.com");
     $player->setHoursPlayed("4.2");
     array_push($players, $player);
+
+    grabar($player);
+    $playersLeidos = leer();
+    echo "<br> Listado de Players: <br>";
+    mostrar($playersLeidos);
+
+
+    echo "<br> Ahora actualizo el codePlayer 2, con 8 horas de juego <br>";
+    #grabar($player);
+    update(2,8);
+    $playersLeidos = leer();
+    mostrar($playersLeidos);
+
+    #Si lo prueban, no va a funcionar porque el 5 ya no existe. Se va a agregar el 6. 
+
+    echo "<br> Ahora borro el codePlayer 5 <br>";
+    delete(5);
+    $playersLeidos = leer();
+    mostrar($playersLeidos);
 
 
     function grabar($player){
@@ -33,7 +52,7 @@
         // Insert  statement;
 
         $insertStatement = $pdo->prepare("INSERT INTO players (codePlayer, firstName, lastName, email, hoursPlayed)
-                                    VALUES (:codePlayer, :firstName, :lastName, :email, :hoursPlayed)");
+                                          VALUES (:codePlayer, :firstName, :lastName, :email, :hoursPlayed)");
 
         $insertStatement->bindParam(":codePlayer", $player->getCodePlayer());
         $insertStatement->bindParam(":firstName", $player->getFirstName());
@@ -41,13 +60,11 @@
         $insertStatement->bindParam(":email", $player->getEmail());
         $insertStatement->bindParam(":hoursPlayed", $player->getHoursPlayed());
 
-
         $insertStatement->execute();
 
     } catch (PDOException $PDOEx) {
         echo $PDOEx->getMessage();
     }
-    echo "<br> YA GRABÓ. ";
 
     }
 
@@ -64,27 +81,7 @@
 
         $result = $selectStatement->fetchAll();
 
-        
-        
-        echo "<br> Ya Leyó <br>";
-
-        #var_dump($result);
-
-        mapear($result);
-
         $playersLeidos = mapear($result);
-
-        /*echo "<br> Usuarios: <br>";
-        
-
-        foreach ($playersLeidos as $player)
-        {
-            echo "<br>CodePlayer: " . $player->getCodePlayer();
-            echo "<br>Nombre: " . $player->getFirstName();
-            echo "<br>Apellido: " . $player->getLastName();
-            echo "<br>Email: " . $player->getEmail();
-            echo "<br>Horas Jugadas: " . $player->getHoursPlayed(). "<br>"; 
-        }*/
 
         return $playersLeidos;
 
@@ -105,27 +102,16 @@
 
     }
 
-    #grabar($player);
-
-    update(2,8);
-
-    function borrarPorCodePlayer($codePlayer)
+    function mostrar ($players)
     {
-        $players = leer();
-        $playersModificado = array();
-
-        foreach($players as $p)
-        {
-            if($p->getCodePlayer() == $codePlayer)
-            {
-                unset($players[$codePlayer -1 ]);
-
-                var_dump ($players);
-
-                
-            }
-        }
-        
+        foreach ($players as $player)
+                {
+                    echo "<br>CodePlayer: " . $player->getCodePlayer();
+                    echo "<br>Nombre: " . $player->getFirstName();
+                    echo "<br>Apellido: " . $player->getLastName();
+                    echo "<br>Email: " . $player->getEmail();
+                    echo "<br>Horas Jugadas: " . $player->getHoursPlayed(). "<br>"; 
+                }
     }
 
     function update ($codePlayer, $nuevasHoras) 
@@ -133,44 +119,33 @@
         $players = leer();
         $playersModificado = array();
 
-        foreach($players as $p)
-        {
-            if($p->getCodePlayer() == $codePlayer)
-            {
-                $p->setHoursPlayed($nuevasHoras);
+            try {
+                $pdo = new PDO ("mysql:host=" .DB_HOST."; dbname=". DB_NAME , DB_USER , DB_PASS);
+                $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+                $insertStatement = $pdo->prepare("UPDATE players SET hoursPlayed = $nuevasHoras where codePlayer = $codePlayer");
+                $insertStatement->execute();
 
-                var_dump ($players);
-
-                try {
-                    $pdo = new PDO ("mysql:host=" .DB_HOST."; dbname=". DB_NAME , DB_USER , DB_PASS);
-                    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            
-                    // Insert  statement;
-            
-                    $insertStatement = $pdo->prepare("UPDATE players SET hoursPlayed = $nuevasHoras where codePlayer = $codePlayer");
-                    $insertStatement->execute();
-
-                    
-            
-                } catch (PDOException $PDOEx) {
-                    echo $PDOEx->getMessage();
-                }
-
-                echo "<br> Ya Editó"; 
-                $players = leer();
-
-                foreach ($players as $player)
-        {
-            echo "<br>CodePlayer: " . $player->getCodePlayer();
-            echo "<br>Nombre: " . $player->getFirstName();
-            echo "<br>Apellido: " . $player->getLastName();
-            echo "<br>Email: " . $player->getEmail();
-            echo "<br>Horas Jugadas: " . $player->getHoursPlayed(). "<br>"; 
-        }
-                
+        
+            } catch (PDOException $PDOEx) {
+                echo $PDOEx->getMessage();
             }
-        }
+                
     }
+        
+    function delete ($codePlayer)
+    {
+        try {
+            $pdo = new PDO ("mysql:host=" .DB_HOST."; dbname=". DB_NAME , DB_USER , DB_PASS);
+            $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    
+            $insertStatement = $pdo->prepare(" DELETE from players WHERE codePlayer = $codePlayer ");
+            $insertStatement->execute();
+    
+        } catch (PDOException $PDOEx) {
+            echo $PDOEx->getMessage();
+        }
 
+    }
 
 ?>
